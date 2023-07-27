@@ -1,37 +1,40 @@
 const express = require("express");
 const app = express();
 const { User } = require("./db/mongo");
-const cors = require("cors");
+const { cors } = require("./middleware/cors");
 
-const PORT = 4000;
-
-app.use(cors());
 app.use(express.json());
+app.use(cors);
 
 function sayHi(req, res) {
   res.send("Hello world!");
 }
 
 app.get("/", sayHi);
-app.post("/api/auth/signup", signUp)
-app.post("/api/auth/login", login)
+app.post("/api/auth/signup", signUp);
+app.post("/api/auth/login", login);
 
-const users = [];
-
-function signUp(req, res) {
+async function signUp(req, res) {
   const email = req.body.email;
   const password = req.body.password;
 
-  const userInDb = user.find((user) => user.email === email);
-  if (userInDb != null) {
-    res.status(400).send("Adresse e-mail déjà existante");
-    return;
-  }
+  // const userInDb = users.find((user) => user.email === email);
+  // if (userInDb != null) {
+  //   res.status(400).send("Adresse e-mail déjà existante");
+  //   return;
+  // }
+
   const user = {
     email: email,
     password: password,
   };
-  users.push(user);
+  try {
+    await User.create(user);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Quelque chose ne s'est pas passé comme prévu");
+    return;
+  }
   res.send("Sign up");
 }
 
