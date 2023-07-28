@@ -1,16 +1,13 @@
-const express = require("express");
-const app = express();
+const express = require("express"); /* Import d'Express */
+const app = express(); /*On appelle la méthode express pour créer une appli Express*/
 const { User } = require("./db/mongo");
 const { cors } = require("./middleware/cors");
+const bcrypt = require('bcrypt');
 
 app.use(express.json());
 app.use(cors);
 
-function sayHi(req, res) {
-  res.send("Hello world!");
-}
 
-app.get("/", sayHi);
 app.post("/api/auth/signup", signUp);
 app.post("/api/auth/login", login);
 
@@ -18,19 +15,19 @@ async function signUp(req, res) {
   const email = req.body.email;
   const password = req.body.password;
 
-  // const userInDb = users.find((user) => user.email === email);
-  // if (userInDb != null) {
-  //   res.status(400).send("Adresse e-mail déjà existante");
-  //   return;
-  // }
+  const hashed = await bcrypt.hash(password, 10);
 
   const user = {
     email: email,
-    password: password,
+    password: hashed,
   };
   try {
     await User.create(user);
   } catch (e) {
+    if(e.errors?.email?.kind === 'unique'){
+      res.status(409).send("Adresse email déjà utilisée")
+      return
+    }
     console.error(e);
     res.status(500).send("Quelque chose ne s'est pas passé comme prévu");
     return;
@@ -38,19 +35,22 @@ async function signUp(req, res) {
   res.send("Sign up");
 }
 
-function login(req, res) {
+async function login(req, res) {
   const body = req.body;
 
-  const userInDb = users.find((user) => user.email === body.email);
+  const userInDb = await User.findOne({email: body.email}).exec();
   if (userInDb == null) {
     res.status(401).send("Mauvaise adresse e-mail");
     return;
   }
   const passwordInDb = userInDb.password;
-  if (passwordInDb != body.password) {
+  const isValid = await bcrypt.compare(body.password, passwordInDb)
+  if (!isValid) {
     res.status(401).send("Mot de passe incorrect");
     return;
   }
+  res.send({token: 'test'})
+  return;
 }
 
 module.exports = app;

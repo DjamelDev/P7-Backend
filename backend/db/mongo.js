@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const uniqueValidator = require('mongoose-unique-validator');
 
 const PASSWORD = "HbufEhdEXe8ofBdE";
 const USER = "djamel";
@@ -16,11 +17,11 @@ async function connect() {
 connect();
 
 const UserSchema = new mongoose.Schema({
-  email: String,
-  password: String,
+  email: {type: String, required: true, unique: true},
+  password: { type: String, required: true },
 });
+UserSchema.plugin(uniqueValidator);
 
 const User = mongoose.model("User", UserSchema);
-
 
 module.exports = { User }; 
