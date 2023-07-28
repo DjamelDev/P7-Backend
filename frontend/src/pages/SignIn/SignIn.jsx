@@ -40,6 +40,10 @@ function SignIn({ setUser }) {
       }
     } catch (err) {
       console.log(err);
+      if (err?.response?.status === 409) {
+        setNotification({ error: true, message: 'Adresse email déjà utilisée' });
+        return;
+      }
       setNotification({ error: true, message: err.message });
       console.log('Some error occured during signing in: ', err);
     } finally {
