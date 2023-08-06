@@ -23,6 +23,7 @@ app.get("/api/books/:id", getOneBook)
 
 /** on configure multer pour intercepter le champ image (une seule image) */
 app.post("/api/books", auth, multer.single("image"), createBook)
+app.put("/api/books/:id", auth, multer.single("image"), updateBook)
 
 async function signUp(req, res) {
   const email = req.body.email
@@ -38,14 +39,16 @@ async function signUp(req, res) {
     await User.create(user)
   } catch (e) {
     if (e.errors?.email?.kind === "unique") {
-      res.status(409).send("Adresse email déjà utilisée")
+      res.status(409).send({ message: "Adresse email déjà utilisée" })
       return
     }
     console.error(e)
-    res.status(500).send("Quelque chose ne s'est pas passé comme prévu")
+    res
+      .status(500)
+      .send({ message: "Quelque chose ne s'est pas passé comme prévu" })
     return
   }
-  res.send("Sign up")
+  res.send({ message: "Sign up" })
 }
 
 async function login(req, res) {
@@ -53,13 +56,13 @@ async function login(req, res) {
 
   const userInDb = await User.findOne({ email: body.email }).exec()
   if (userInDb == null) {
-    res.status(401).send("Mauvaise adresse e-mail")
+    res.status(401).send({ message: "Mauvaise adresse e-mail" })
     return
   }
   const passwordInDb = userInDb.password
   const isValid = await bcrypt.compare(body.password, passwordInDb)
   if (!isValid) {
-    res.status(401).send("Mot de passe incorrect")
+    res.status(401).send({ message: "Mot de passe incorrect" })
     return
   }
   const token = getToken(userInDb)
@@ -78,7 +81,7 @@ async function getOneBook(req, res) {
     const book = await Book.findOne({ _id: id })
     res.send(book)
   } catch (err) {
-    res.status(404).send("Livre non trouvé")
+    res.status(404).send({ message: "Livre non trouvé" })
   }
 }
 
@@ -106,7 +109,38 @@ async function createBook(req, res) {
       }` /* req.file a été renseigné par multer */,
     })
     await bookDbo.save()
-    res.status(201).json("Livre créé")
+    res.status(201).json({ message: "Livre créé" })
+    return
+  } catch (error) {
+    console.error(error)
+    res.status(400).json({ error })
+  }
+}
+
+async function updateBook(req, res) {
+  try {
+    const { id } = req.params
+    const bookData = req.file ? JSON.parse(req.body.book) : req.body
+
+    const book = await Book.findOne({ _id: id })
+    if (!book) {
+      res.status(404).json({ message: "Livre non trouvé" })
+    }
+
+    if (book.userId !== req.auth.userId) {
+      res.status(403).json({ message: "Non autorisé" })
+      return
+    }
+
+    if (req.file) {
+      bookData.imageUrl = `${req.protocol}://${req.get("host")}/images/${
+        req.file.filename
+      }`
+    }
+
+    await Book.updateOne({ _id: id }, bookData)
+    res.status(200).json({ message: "Livre enregistré" })
+
     return
   } catch (error) {
     console.error(error)
