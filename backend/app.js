@@ -7,9 +7,11 @@ const { User, Book } = require("./db/mongo")
 const { cors } = require("./middleware/cors")
 const auth = require("./middleware/auth")
 const multer = require("./middleware/multer")
+const rating = require("./middleware/rating")
 
 const bcrypt = require("bcrypt")
 const { getToken } = require("./lib/jwt")
+const { calcAverageRating } = require("./lib/rating")
 
 app.use(express.json())
 app.use(cors)
@@ -25,6 +27,7 @@ app.get("/api/books/:id", getOneBook)
 app.post("/api/books", auth, multer.single("image"), createBook)
 app.put("/api/books/:id", auth, multer.single("image"), updateBook)
 app.delete("/api/books/:id", auth, deleteBook)
+app.post("/api/books/:id/rating", auth, rating, rateBook)
 
 async function signUp(req, res) {
   const email = req.body.email
@@ -163,6 +166,39 @@ async function deleteBook(req, res) {
 
     await Book.deleteOne({ _id: id })
     res.status(200).json({ message: "Livre supprimé" })
+  } catch (error) {
+    res.status(400).json({ error })
+  }
+}
+
+async function rateBook(req, res) {
+  try {
+    const { id } = req.params
+    const { userId, rating } = req.body
+
+    const book = await Book.findOne({ _id: id })
+    if (!book) {
+      res.status(404).json({ message: "Livre non trouvé" })
+    }
+    if (book.ratings.find((rating) => rating.userId === userId)) {
+      res.status(409).json({ message: "Déjà noté" })
+      return
+    }
+    const newRating = {
+      userId,
+      grade: Number(rating),
+    }
+    const updatedRatings = [...(book.ratings ?? []), newRating]
+    const updateAverageRating = calcAverageRating(updatedRatings)
+    const updatedBook = await Book.findOneAndUpdate(
+      { _id: id },
+      {
+        $push: { ratings: newRating },
+        averageRating: updateAverageRating,
+      },
+      { new: true }
+    )
+    res.status(200).json(updatedBook)
   } catch (error) {
     res.status(400).json({ error })
   }
