@@ -24,6 +24,7 @@ app.get("/api/books/:id", getOneBook)
 /** on configure multer pour intercepter le champ image (une seule image) */
 app.post("/api/books", auth, multer.single("image"), createBook)
 app.put("/api/books/:id", auth, multer.single("image"), updateBook)
+app.delete("/api/books/:id", auth, deleteBook)
 
 async function signUp(req, res) {
   const email = req.body.email
@@ -143,7 +144,26 @@ async function updateBook(req, res) {
 
     return
   } catch (error) {
-    console.error(error)
+    res.status(400).json({ error })
+  }
+}
+
+async function deleteBook(req, res) {
+  try {
+    const { id } = req.params
+    const book = await Book.findOne({ _id: id })
+    if (!book) {
+      res.status(404).json({ message: "Livre non trouvé" })
+    }
+
+    if (book.userId !== req.auth.userId) {
+      res.status(403).json({ message: "Non autorisé" })
+      return
+    }
+
+    await Book.deleteOne({ _id: id })
+    res.status(200).json({ message: "Livre supprimé" })
+  } catch (error) {
     res.status(400).json({ error })
   }
 }
