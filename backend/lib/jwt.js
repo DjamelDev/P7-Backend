@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const SECRET = "djamel-secret";
+const SECRET = "djamel-secret"; 
 
 const verify = (token) => jwt.verify(token, SECRET);
 

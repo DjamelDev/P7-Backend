@@ -139,6 +139,8 @@ async function createBook(req, res) {
     const { book } =
       req.body; /* Cette ligne extrait l'objet "book" du corps de la requête. */
 
+    // bookData.rate
+
     const bookData =
       JSON.parse(
         book
@@ -226,6 +228,7 @@ async function rateBook(req, res) {
     const book = await Book.findOne({ _id: id });
     if (!book) {
       res.status(404).json({ message: "Livre non trouvé" });
+      return;
     }
     if (book.ratings.find((rating) => rating.userId === userId)) {
       res.status(409).json({ message: "Déjà noté" });

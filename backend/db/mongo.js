@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const uniqueValidator = require("mongoose-unique-validator");
+const mongoose = require("mongoose"); /*  Importe le module Mongoose, qui est une bibliothèque JavaScript pour la gestion des bases de données MongoDB. */
+const uniqueValidator = require("mongoose-unique-validator"); /*  Importe le module "mongoose-unique-validator", qui permet de valider les champs uniques dans les schémas Mongoose. */
 
 const PASSWORD = "HbufEhdEXe8ofBdE";
 const USER = "djamel";
