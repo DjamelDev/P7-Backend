@@ -1,9 +1,8 @@
-const mongoose = require("mongoose"); /*  Importe le module Mongoose, qui est une bibliothèque JavaScript pour la gestion des bases de données MongoDB. */
-const uniqueValidator = require("mongoose-unique-validator"); /*  Importe le module "mongoose-unique-validator", qui permet de valider les champs uniques dans les schémas Mongoose. */
+const mongoose = require("mongoose"); /*  Importe le module Mongoose, qui est une bibliothèque JavaScript pour la gestion des BDD MongoDB. */
+const uniqueValidator = require("mongoose-unique-validator"); /*  Importe le module qui permet de valider les champs uniques dans les schémas Mongoose. */
 
-const PASSWORD = "HbufEhdEXe8ofBdE";
-const USER = "djamel";
-const DB_URL = `mongodb+srv://${USER}:${PASSWORD}@cluster0.rc7q0m2.mongodb.net/?retryWrites=true&w=majority`;
+require("dotenv").config();
+const DB_URL = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.rc7q0m2.mongodb.net/?retryWrites=true&w=majority`;
 console.log("DB_URL: ", DB_URL);
 
 async function connect() {
